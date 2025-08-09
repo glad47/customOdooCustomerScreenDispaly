@@ -1,0 +1,1 @@
+python3 odoo-bin --addons-path=addons,custom_addons -u custom_addons/pos_customer_display_fullscreen   -d mydb2
