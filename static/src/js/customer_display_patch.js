@@ -35,19 +35,19 @@ odoo.define('pos_customer_display_fullscreen.CustomerFacingDisplayButtonPatch', 
 
                             const targetScreenIndex = currentScreenIndex === 0 ? 1 : 0;
                             const targetScreen = screens[targetScreenIndex];
-
-                            this.env.pos.customer_display = window.open(
+                            const popup = window.open(
                                 '',
                                 'CustomerDisplaySecondScreen',
-                                `width=${targetScreen.width},height=${targetScreen.height},left=${targetScreen.left},top=${targetScreen.top}`
-                            );
+                                `width=${targetScreen.width},height=${targetScreen.height},left=${targetScreen.left},top=${targetScreen.top},fullscreen=yes,resizable=no,toolbar=no,menubar=no,scrollbars=no,status=no`
+                                );
 
-                            const renderedHtml = await this.env.pos.render_html_for_customer_facing_display();
-                            const $renderedHtml = $('<div>').html(renderedHtml);
-                            $(this.env.pos.customer_display.document.body).html($renderedHtml.find('.pos-customer_facing_display'));
-                            $(this.env.pos.customer_display.document.head).html($renderedHtml.find('.resources').html());
-
-                            this.env.pos.customer_display.onload = function () {
+                                if (popup) {
+                                this.env.pos.customer_display = popup;
+                                const renderedHtml = await this.env.pos.render_html_for_customer_facing_display();
+                                const $renderedHtml = $('<div>').html(renderedHtml);
+                                $(popup.document.body).html($renderedHtml.find('.pos-customer_facing_display'));
+                                $(popup.document.head).html($renderedHtml.find('.resources').html());
+                                this.env.pos.customer_display.onload = function () {
                                 const elem = this.env.pos.customer_display.document.documentElement;
                                 if (elem.requestFullscreen) {
                                     elem.requestFullscreen().catch(err => {
@@ -55,7 +55,9 @@ odoo.define('pos_customer_display_fullscreen.CustomerFacingDisplayButtonPatch', 
                                     });
                                 }
                             };
-
+                            } else {
+                                console.warn('Popup blocked or failed to open');
+                            }
                             return;
                         }
                     } catch (err) {
@@ -65,7 +67,7 @@ odoo.define('pos_customer_display_fullscreen.CustomerFacingDisplayButtonPatch', 
 
                 // Fallback
                 console.log("Fallback to default display");
-                this.env.pos.customer_display = window.open('', 'Customer Display', 'height=600,width=900');
+                this.env.pos.customer_display = window.open('', 'Customer Display', 'height=600,width=900,fullscreen=yes');
                 const renderedHtml = await this.env.pos.render_html_for_customer_facing_display();
                 const $renderedHtml = $('<div>').html(renderedHtml);
                 $(this.env.pos.customer_display.document.body).html($renderedHtml.find('.pos-customer_facing_display'));
