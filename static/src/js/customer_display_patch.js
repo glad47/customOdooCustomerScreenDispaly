@@ -7,6 +7,26 @@ odoo.define('pos_customer_display_fullscreen.CustomerFacingDisplayButtonPatch', 
 
     const PatchedCustomerFacingDisplayButton = CustomerFacingDisplayButton =>
         class extends CustomerFacingDisplayButton {
+
+            activateCustomerDisplayFullscreen() {
+                                    const customerWindow = this.env.pos.customer_display;
+                                    if (customerWindow && customerWindow.document) {
+                                        const elem = customerWindow.document.documentElement;
+                                        if (elem.requestFullscreen) {
+                                            elem.requestFullscreen()
+                                                .then(() => {
+                                                    console.log("✅ Fullscreen entered successfully");
+                                                })
+                                                .catch(err => {
+                                                    console.warn("❌ Fullscreen failed:", err);
+                                                });
+                                        } else {
+                                            console.log("❌ Fullscreen not supported");
+                                        }
+                                    } else {
+                                        console.log("❌ Customer display window not available");
+                                    }
+                                }
             async onClickLocal() {
 
                 if ('getScreenDetails' in window) {
@@ -38,7 +58,7 @@ odoo.define('pos_customer_display_fullscreen.CustomerFacingDisplayButtonPatch', 
                             const popup = window.open(
                                 '',
                                 'CustomerDisplaySecondScreen',
-                                `width=${targetScreen.width},height=${targetScreen.height},left=${targetScreen.left},top=${targetScreen.top},fullscreen=yes,resizable=no,toolbar=no,menubar=no,scrollbars=no,status=no`
+                                `width=${targetScreen.width},height=${targetScreen.height},left=${targetScreen.left},top=${targetScreen.top}`
                                 );
 
                                 if (popup) {
@@ -47,17 +67,13 @@ odoo.define('pos_customer_display_fullscreen.CustomerFacingDisplayButtonPatch', 
                                 const $renderedHtml = $('<div>').html(renderedHtml);
                                 $(popup.document.body).html($renderedHtml.find('.pos-customer_facing_display'));
                                 $(popup.document.head).html($renderedHtml.find('.resources').html());
-                                this.env.pos.customer_display.onload = function () {
-                                const elem = this.env.pos.customer_display.document.documentElement;
-                                if (elem.requestFullscreen) {
-                                    elem.requestFullscreen().catch(err => {
-                                        console.warn("Fullscreen failed:", err);
-                                    });
-                                }
-                            };
+                               
                             } else {
                                 console.warn('Popup blocked or failed to open');
                             }
+
+                            this.activateCustomerDisplayFullscreen();
+
                             return;
                         }
                     } catch (err) {
